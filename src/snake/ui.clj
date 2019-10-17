@@ -36,7 +36,9 @@
   (doseq [point body]
     (fill-point g point color)))
 
-(defn- game-panel [frame snake apple]
+(defn- game-panel [frame game]
+(let [snake (game :snake)
+      apple (game :apple)]
   (proxy [JPanel ActionListener KeyListener] []
     (paintComponent [g] ; <label id="code.game-panel.paintComponent"/>
       (proxy-super paintComponent g)
@@ -57,15 +59,14 @@
       (Dimension. (* (inc game/width) point-size)
                   (* (inc game/height) point-size)))
     (keyReleased [e])
-    (keyTyped [e])))
+    (keyTyped [e]))))
 
 (def turn-millis 75)
 
 (defn game []
-  (let [snake (ref (game/create-snake))
-        apple (ref (game/create-apple))
+  (let [game  (game/make)
         frame (JFrame. "Snake")
-        panel (game-panel frame snake apple)
+        panel (game-panel frame game)
         timer (Timer. turn-millis panel)]
     (doto panel
       (.setFocusable true)
@@ -73,6 +74,7 @@
     (doto frame
       (.add panel)
       (.pack)
-      (.setVisible true))
+      (.setVisible true)
+      (.setDefaultCloseOperation JFrame/EXIT_ON_CLOSE))
     (.start timer)
-    [snake, apple, timer]))
+    [(game :snake), (game :apple), timer]))

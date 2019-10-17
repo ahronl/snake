@@ -11,27 +11,40 @@
   (vec (apply map + pts)))
 
 
-(comment (create-apple))
+(comment (gen-apple))
 
-(defn create-apple []
+(defn- gen-apple []
   {:location [(rand-int width) (rand-int height)]
    :color {:r 210 :g 50 :b 90}
    :type :apple})
 
+(defn create-apple []
+  (ref (gen-apple)))
+
 (comment (create-snake))
 
-(defn create-snake []
+(defn- gen-snake []
   {:body '([1 1])
    :dir [1 0]
    :color {:r 15 :g 160 :b 70}
    :type :snake})
 
-(comment (move (create-snake)) (move (create-snake) :grow) )
+(defn create-snake []
+  (ref (gen-snake)))
+
+(defn make []
+  {:snake (create-snake)
+   :apple (create-apple)})
+
+(comment (move (gen-snake)) (move (gen-snake) :grow))
+
 (defn- move [{:keys [body dir] :as snake} & grow]
   (assoc snake :body
          (cons (add-points (first body) dir)
                (if grow body (butlast body)))))
+
 (comment (win? {:body [[1 1] [1 2] [1 3] [1 4] [1 5]]}) ==> true)
+
 (defn win? [{body :body}]
   (>= (count body) win-lenght))
 
@@ -43,15 +56,15 @@
 (defn- eats? [{[snake-head] :body} {apple :location}]
   (= snake-head apple))
 
-(comment (turn (create-snake) [0 -1]))
+(comment (turn (gen-snake) [0 -1]))
 
 (defn- turn [snake newdir]
   (assoc snake :dir newdir))
 
 (defn reset-game [snake apple]
   (dosync
-   (ref-set apple (create-apple))
-   (ref-set snake (create-snake)))
+   (ref-set apple (gen-apple))
+   (ref-set snake (gen-snake)))
   nil)
 
 (defn update-direction [snake newdir]
@@ -62,7 +75,7 @@
   (dosync
    (if (eats? @snake @apple)
      (do
-       (ref-set apple (create-apple))
+       (ref-set apple (gen-apple))
        (alter snake move :grow))
      (alter snake move)))
   nil)
