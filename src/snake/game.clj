@@ -4,14 +4,8 @@
 (def height 50)
 (def win-lenght 5)
 
-(comment
-  (add-points [10 10] [-1 0]) ==> [9 10])
-
 (defn- add-points [& pts]
   (vec (apply map + pts)))
-
-
-(comment (gen-apple))
 
 (defn- gen-apple []
   {:location [(rand-int width) (rand-int height)]
@@ -20,8 +14,6 @@
 
 (defn create-apple []
   (ref (gen-apple)))
-
-(comment (create-snake))
 
 (defn- gen-snake []
   {:body '([1 1])
@@ -36,42 +28,40 @@
   {:snake (create-snake)
    :apple (create-apple)})
 
-(comment (move (gen-snake)) (move (gen-snake) :grow))
-
 (defn- move [{:keys [body dir] :as snake} & grow]
   (assoc snake :body
          (cons (add-points (first body) dir)
                (if grow body (butlast body)))))
 
-(comment (win? {:body [[1 1] [1 2] [1 3] [1 4] [1 5]]}) ==> true)
+(defn win? [{snake :snake}]
+  (let [body (:body @snake)]
+    (>= (count body) win-lenght)))
 
-(defn win? [{body :body}]
-  (>= (count body) win-lenght))
-
-(defn- head-overlaps-body? [{[head & body] :body}]
-  (contains? (set body) head))
+(defn- head-overlaps-body? [game]
+  (let [body (:body @(:snake game))
+        head (first body)
+        rb (rest body)]
+    (contains? (set rb) head)))
 
 (def lose? head-overlaps-body?)
 
 (defn- eats? [{[snake-head] :body} {apple :location}]
   (= snake-head apple))
 
-(comment (turn (gen-snake) [0 -1]))
-
 (defn- turn [snake newdir]
   (assoc snake :dir newdir))
 
-(defn reset-game [snake apple]
+(defn reset-game [{:keys [snake apple]}]
   (dosync
    (ref-set apple (gen-apple))
    (ref-set snake (gen-snake)))
   nil)
 
-(defn update-direction [snake newdir]
-  (when newdir (dosync (alter snake turn newdir))))
+(defn update-direction [game newdir]
+  (let [snake (:snake game)]
+    (when newdir (dosync (alter snake turn newdir)))))
 
-
-(defn update-positions [snake apple]
+(defn update-positions [{:keys [apple snake]}]
   (dosync
    (if (eats? @snake @apple)
      (do
@@ -79,11 +69,3 @@
        (alter snake move :grow))
      (alter snake move)))
   nil)
-
-(comment
-  (def test-snake (ref nil))
-  (def test-apple (ref nil))
-
-  (reset-game test-snake test-apple)
-  (dosync (alter test-apple assoc :location [1 1]))
-  (update-positions test-snake test-apple))

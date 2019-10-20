@@ -14,9 +14,6 @@
 
 (def point-size 10)
 
-(comment
-  (point-to-screen-rect [5 10]) ==> (50 100 10 10))
-
 (defn- point-to-screen-rect [pt]
   (map #(* % point-size) [(pt 0) (pt 1) 1 1]))
 
@@ -36,30 +33,30 @@
   (doseq [point body]
     (fill-point g point color)))
 
+(defn- paint-game [g {:keys [snake apple]}]
+  (do (paint g @apple)
+      (paint g @snake)))
+
 (defn- game-panel [frame game]
-(let [snake (game :snake)
-      apple (game :apple)]
   (proxy [JPanel ActionListener KeyListener] []
-    (paintComponent [g] ; <label id="code.game-panel.paintComponent"/>
+    (paintComponent [g]
       (proxy-super paintComponent g)
-      (paint g @snake)
-      (paint g @apple))
-    (actionPerformed [e] ; <label id="code.game-panel.actionPerformed"/>
-      (game/update-positions snake apple)
-      (when (game/lose? @snake)
-        (game/reset-game snake apple)
+      (paint-game g game))
+    (actionPerformed [e]
+      (game/update-positions game)
+      (when (game/lose? game)
+        (game/reset-game game)
         (JOptionPane/showMessageDialog frame "You lose!"))
-      (when (game/win? @snake)
-        (game/reset-game snake apple)
+      (when (game/win? game)
+        (game/reset-game game)
         (JOptionPane/showMessageDialog frame "You win!"))
       (.repaint this))
-    (keyPressed [e] ; <label id="code.game-panel.keyPressed"/>
-      (game/update-direction snake (dirs (.getKeyCode e))))
+    (keyPressed [e]
+      (game/update-direction game (dirs (.getKeyCode e))))
     (getPreferredSize []
       (Dimension. (* (inc game/width) point-size)
-                  (* (inc game/height) point-size)))
-    (keyReleased [e])
-    (keyTyped [e]))))
+                  (* (inc game/height) point-size))) (keyReleased [e])
+    (keyTyped [e])))
 
 (def turn-millis 75)
 
