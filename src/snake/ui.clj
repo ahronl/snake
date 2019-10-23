@@ -37,6 +37,14 @@
   (do (paint g @apple)
       (paint g @snake)))
 
+(def turn-millis (atom 70))
+
+(def timer (ref nil))
+
+(defn- make-faster [turn]
+  (let [new-turn (- turn 10)]
+    (if (<= new-turn 0) 1 new-turn)))
+
 (defn- game-panel [frame game]
   (proxy [JPanel ActionListener KeyListener] []
     (paintComponent [g]
@@ -49,6 +57,8 @@
         (JOptionPane/showMessageDialog frame "You lose!"))
       (when (game/win? game)
         (game/reset-game game)
+        (swap! turn-millis make-faster)
+        (.setDelay @timer @turn-millis)
         (JOptionPane/showMessageDialog frame "You win!"))
       (when (game/out-of-frame? game)
         (game/reset-game game)
@@ -61,13 +71,12 @@
                   (* (inc game/height) point-size))) (keyReleased [e])
     (keyTyped [e])))
 
-(def turn-millis 75)
-
 (defn game []
   (let [game  (game/make)
         frame (JFrame. "Snake")
-        panel (game-panel frame game)
-        timer (Timer. turn-millis panel)]
+        panel (game-panel frame game)]
+    (dosync
+     (ref-set timer (Timer. @turn-millis panel)))
     (doto panel
       (.setFocusable true)
       (.addKeyListener panel))
@@ -75,6 +84,6 @@
       (.add panel)
       (.pack)
       (.setVisible true))
-      (.setDefaultCloseOperation JFrame/EXIT_ON_CLOSE)
-    (.start timer)
-    [(game :snake), (game :apple), timer]))
+    (.setDefaultCloseOperation frame JFrame/EXIT_ON_CLOSE)
+    (.start @timer)
+    [(game :snake), (game :apple), @timer]))

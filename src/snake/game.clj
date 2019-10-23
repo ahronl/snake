@@ -1,7 +1,7 @@
 (ns snake.game)
 
-(def width 75)
-(def height 50)
+(def width 30)
+(def height 25)
 (def win-lenght 5)
 
 (defn- add-points [& pts]
