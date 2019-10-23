@@ -75,6 +75,6 @@
       (.add panel)
       (.pack)
       (.setVisible true))
-      (.setDefaultCloseOperation JFrame/EXIT_ON_CLOSE))
+      (.setDefaultCloseOperation JFrame/EXIT_ON_CLOSE)
     (.start timer)
     [(game :snake), (game :apple), timer]))
