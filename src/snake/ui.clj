@@ -50,6 +50,9 @@
       (when (game/win? game)
         (game/reset-game game)
         (JOptionPane/showMessageDialog frame "You win!"))
+      (when (game/out-of-frame? game)
+        (game/reset-game game)
+        (JOptionPane/showMessageDialog frame "You are out of bounds!"))
       (.repaint this))
     (keyPressed [e]
       (game/update-direction game (dirs (.getKeyCode e))))
@@ -71,7 +74,7 @@
     (doto frame
       (.add panel)
       (.pack)
-      (.setVisible true)
+      (.setVisible true))
       (.setDefaultCloseOperation JFrame/EXIT_ON_CLOSE))
     (.start timer)
     [(game :snake), (game :apple), timer]))

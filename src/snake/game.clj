@@ -45,6 +45,12 @@
 
 (def lose? head-overlaps-body?)
 
+(defn out-of-frame? [{:keys [snake]}]
+  (let [body (:body @snake)
+        head (first body)
+        [w h] head]
+    (or (or (< width w) (< w 0)) (or (< height h) (< h 0)))))
+
 (defn- eats? [{[snake-head] :body} {apple :location}]
   (= snake-head apple))
 
