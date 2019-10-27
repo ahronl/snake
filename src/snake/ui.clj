@@ -17,7 +17,6 @@
 (defn- point-to-screen-rect [pt]
   (map #(* % point-size) [(pt 0) (pt 1) 1 1]))
 
-
 (defn- fill-point [g pt color]
   (let [[x y width height] (point-to-screen-rect pt)
         c (Color. (:r color) (:g color) (:b color))]
@@ -34,12 +33,15 @@
     (fill-point g point color)))
 
 (defn- paint-game [g {:keys [snake apple]}]
-  (do (paint g @apple)
-      (paint g @snake)))
+  (paint g @apple)
+  (paint g @snake))
 
 (def turn-millis (atom 70))
 
-(def timer (ref nil))
+(def state-map (atom {}))
+
+(defn- get-from-state [k]
+  (k @state-map))
 
 (defn- make-faster [turn]
   (let [new-turn (- turn 10)]
@@ -58,7 +60,7 @@
       (when (game/win? game)
         (game/reset-game game)
         (swap! turn-millis make-faster)
-        (.setDelay @timer @turn-millis)
+        (.setDelay (get-from-state :timer) @turn-millis)
         (JOptionPane/showMessageDialog frame "You win!"))
       (when (game/out-of-frame? game)
         (game/reset-game game)
@@ -75,8 +77,7 @@
   (let [game  (game/make)
         frame (JFrame. "Snake")
         panel (game-panel frame game)]
-    (dosync
-     (ref-set timer (Timer. @turn-millis panel)))
+    (swap! state-map assoc :timer (Timer. @turn-millis panel))
     (doto panel
       (.setFocusable true)
       (.addKeyListener panel))
@@ -85,5 +86,5 @@
       (.pack)
       (.setVisible true))
     (.setDefaultCloseOperation frame JFrame/EXIT_ON_CLOSE)
-    (.start @timer)
-    [(game :snake), (game :apple), @timer]))
+    (.start (get-from-state :timer))
+    [(game :snake), (game :apple), (get-from-state :timer)]))
